@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Zatacka</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/reset.css" />
+</head>
+
+<body>
+    <ul id="scoreboard"></ul>
+    <canvas id="canvas" width="500" height="500" style="border: 1px solid white"></canvas>
+
+    <!--<script data-main="js/app" src="js/lib/require.js"></script>-->
+    <script src="js/lib/require.js"></script>
+    <script type="text/javascript">
+
+        requirejs.config({
+            baseUrl: 'js/lib',
+            paths: {
+                app: '../app',
+            },
+            shim: {
+                can: {
+                    deps: ['jquery'],
+                    exports: 'can'
+                },
+                'underscore': {
+                    exports: '_'
+                }
+            },
+            urlArgs: "bust=" +  (new Date()).getTime()
+        });
+
+        requirejs([
+            'app/game',
+            'app/player',
+            'app/controllers/keysController',
+            'app/controllers/scoreboardController',
+            'app/graphics',
+            'app/keys',
+            'app/colors',
+            'app/constraints/boundConstraint',
+            'app/constraints/collisionConstraint',
+        ],
+        function (Game, Player, KeysController, ScoreboardController, Graphics, Keys, Colors, BoundConstraint, CollisionConstraint) {
+
+            var colors = Colors;
+            var keysController = new KeysController();
+            var canvas = document.getElementById('canvas');
+
+            var constraints = [];
+            var boundConstraint = new BoundConstraint(canvas.scrollWidth, canvas.scrollHeight);
+            var collisionConstraint = new CollisionConstraint(canvas.getContext('2d'), '#000');
+            constraints.push(boundConstraint);
+            constraints.push(collisionConstraint);
+
+            var players = [];
+            var player1 = new Player(new Keys(37, 39), colors[0]);
+            var player2 = new Player(new Keys(75, 76), colors[1]);
+            var player3 = new Player(new Keys(77, 78), colors[2]);
+            players.push(player1);
+            players.push(player2);
+            players.push(player3);
+
+            var scoreboardController = new ScoreboardController('#scoreboard', {players: players});
+
+            var graphics = new Graphics(canvas.getContext('2d'));
+            var game = new Game(players, graphics, keysController, constraints);
+            game.updatePlayersPositions();
+            game.gameLoopInterval = setInterval(
+                function() {
+                    game.gameLoop();
+                }
+            , 1000 / Game.fps);
+        });
+
+    </script>
+</body>
+
+</html>
